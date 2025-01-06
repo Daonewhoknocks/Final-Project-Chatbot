@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>San Pedro Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .chat-container {
+            width: 400px;
+            max-width: 90%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chat-history {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-message, .response-message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            max-width: 100%;
+        }
+        .chat-message {
+            background-color: #e9f5ff;
+            align-self: flex-end;
+        }
+        .response-message {
+            background-color: #d0e0a1;
+            align-self: flex-start;
+        }
+        .loading {
+            color: #888;
+            font-size: 14px;
+            padding: 8px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Laguna Travel Assistance</h1>
+        <div id="chat-history" class="chat-history"></div>
+        <textarea id="userQuery" rows="4" placeholder="Ask me about San Pedro..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        let userId = Date.now();
+
+        function updateChatHistory(userMessage, botResponse) {
+            const chatHistory = document.getElementById("chat-history");
+
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.classList.add("chat-message");
+            userMessageDiv.textContent = "You: " + userMessage;
+            chatHistory.appendChild(userMessageDiv);
+
+            const botResponseDiv = document.createElement("div");
+            botResponseDiv.classList.add("response-message");
+            botResponseDiv.innerHTML = "Bot: " + formatBotResponse(botResponse);
+            chatHistory.appendChild(botResponseDiv);
+
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function formatBotResponse(response) {
+            if (response.includes("Would you like to see more?")) {
+                return response;
+            }
+
+            let formattedResponse = response
+
+            return formattedResponse;
+        }
+
+        function showLoading() {
+            const chatHistory = document.getElementById("chat-history");
+            const loadingDiv = document.createElement("div");
+            loadingDiv.classList.add("loading");
+            loadingDiv.innerHTML = '<div class="spinner"></div> Loading...';
+            chatHistory.appendChild(loadingDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loadingDiv = document.querySelector('.loading');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const query = document.getElementById("userQuery").value;
+
+            if (query.trim() === "") {
+                alert("Please enter a query!");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        user_id: userId
+                    }),
+                });
+
+                const data = await response.json();
+                updateChatHistory(query, data.response);
+            } catch (error) {
+                updateChatHistory(query, "Try asking for other locations.");
+            } finally {
+                removeLoading();
+            }
+
+            document.getElementById("userQuery").value = '';
+        }
+    </script>
+</body>
+</html>
